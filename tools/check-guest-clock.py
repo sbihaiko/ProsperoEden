@@ -77,6 +77,10 @@ int main() {
     for (int i = 0; i < 6; ++i) { now += 50'000'000; At(now); FrameQueued(3); }
     assert(rate.load() == kOne);
     assert(rate.load() == kOne);
+    // A one-refresh title that comes late keeps an honest clock: its audio is paced in real
+    // time, and a stretched counter would make it produce fewer samples than the sink plays.
+    for (int i = 0; i < 8; ++i) { now += 20'000'000; At(now); FrameQueued(1); }
+    assert(rate.load() == kOne);
     return 0;
 }
 """
@@ -88,4 +92,4 @@ with tempfile.TemporaryDirectory() as tmp:
                     '-I' + tmp, '-I' + str(root / 'headless'), '-x', 'c++', '-', '-o', str(exe)],
                    input=code, text=True, check=True)
     subprocess.run([str(exe)], check=True)
-print('Guest clock: PASS on time, late, a hitch, too late, a step down and back up, the game\'s own rate; the counter never goes back')
+print('Guest clock: PASS on time, late, a hitch, too late, a one-refresh title left honest, a step down and back up, the game\'s own rate; the counter never goes back')
